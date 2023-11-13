@@ -12,17 +12,32 @@ datasource db {
     relationMode      = "prisma"
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Task {
+    id          Int      @id @default(autoincrement())
+    task        String
+    check       Boolean
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    types       Type[]
+    createdBy   User     @relation(fields: [createdById], references: [id])
+    createdById String
+
+    @@index([id])
+    @@index([createdById])
+}
+
+model Type {
+    id   Int    @id @default(autoincrement())
+    type String
 
     createdBy   User   @relation(fields: [createdById], references: [id])
     createdById String
+    Task        Task?  @relation(fields: [taskId], references: [id])
+    taskId      Int?
 
-    @@index([name])
+    @@index([id])
     @@index([createdById])
+    @@index([taskId])
 }
 
 // Necessary for Next auth
@@ -32,13 +47,13 @@ model Account {
     type              String
     provider          String
     providerAccountId String
-    refresh_token     String? // @db.Text
-    access_token      String? // @db.Text
+    refresh_token     String? @db.Text
+    access_token      String? @db.Text
     expires_at        Int?
-    token_type        String?
-    scope             String?
-    id_token          String? // @db.Text
-    session_state     String?
+    token_type        String? @db.Text
+    scope             String? @db.Text
+    id_token          String? @db.Text
+    session_state     String? @db.Text
     user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
     @@unique([provider, providerAccountId])
@@ -57,13 +72,14 @@ model Session {
 
 model User {
     id            String    @id @default(cuid())
-    name          String?
+    name          String?   @db.Text
     email         String?   @unique
     emailVerified DateTime?
-    image         String?
+    image         String?   @db.Text
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
+    tasks         Task[]
+    Type          Type[]
 }
 
 model VerificationToken {
